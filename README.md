@@ -70,35 +70,6 @@ With additional implementations for **"Airplane mode"**, **"Brightness"** and **
 
 ------------------------
 
-## Installation  ⬇️
-
-Modern Flyouts is available for you to install via  [Microsoft Store](https://www.microsoft.com/store/apps/9MT60QV066RP), [GitHub](https://github.com/ModernFlyouts-Community/ModernFlyouts/releases/latest), winget and [Chocolatey](https://chocolatey.org/packages/modernflyouts).
-
-All the distribution methods mentioned above are supported, however installing the app from the **Microsoft Store** is **recommended** as it is easier to install and will automatically remain up to date.
-
-**Microsoft Store**
-
-<a href='https://www.microsoft.com/store/apps/9MT60QV066RP?ocid=badge'><img src='https://developer.microsoft.com/en-us/store/badges/images/English_get-it-from-MS.png' alt='Microsoft Store' width='160'/></a>
-
-**GitHub**
-
-1. Go to the [latest release on the Releases page](https://github.com/ModernFlyouts-Community/ModernFlyouts/releases/latest).
-2. Download the latest ***.msixbundle** file and the [latest available] **.cer** file from the assets.
-3. Install the certificate into the Trusted People directory.
-4. Install the downloaded ***.msixbundle** file and launch the app from the **Start Menu**.
-
-**winget**
-
-_please note that due to how winget processes package updates, updates may take **longer** to be released to winget_.
-
-`winget install --id=ModernFlyouts.ModernFlyouts -e`
-
-**Chocolatey**
-
-ModernFlyouts is **unofficially** available to install via Chocolatey [here](https://chocolatey.org/packages/modernflyouts), however as this is not maintained by us we can not verify its security or its update status.
-
-------------------------
-
 ## Connect with us  🌐
 
 You can join our [Discord Server](https://discord.gg/TcYskeyaYE) or [Telegram Group](https://t.me/ModernFlyouts) to connect with us. By doing so, we can have off-topic conversations, news about this app, development previews and providing & collecting feedback.
@@ -138,14 +109,3 @@ We must also say a big thanks to [our contributors](https://github.com/ModernFly
 - [ModernWpf](https://github.com/Kinnara/ModernWpf) (Inspired the name **Modern**Flyouts)
 - [Hardcodet.NotifyIcon.Wpf](https://github.com/hardcodet/wpf-notifyicon)
 
-------------------------
-
-## Beta Builds  🚧
-
-The ability to signup for beta builds has been temporarily disabled while we work on a better way to release and manage them. Beta builds will still occasionally be available to download fron the releases tab on github. Thank to everyone who help us test new releases and find bugs before they go public.
-
-------------------------
-
-## Screenshots  📷
-
-Screenshots are temporarily removed 😅. They will be restored during v1.0 release cycle.
