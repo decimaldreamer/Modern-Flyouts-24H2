@@ -1,0 +1,6 @@
+MainPackage=C:\Users\uintptr\Desktop\ModernFlyouts\ModernFlyouts.Package\bin\x64\Release\ModernFlyouts.Package_0.9.8516.0_x64.msix
+SymbolPackage=C:\Users\uintptr\Desktop\ModernFlyouts\ModernFlyouts.Package\obj\x64\Release\Symbols\ModernFlyouts.Package_0.9.8516.0_x64.appxsym
+ResourcePack=C:\Users\uintptr\Desktop\ModernFlyouts\ModernFlyouts.Package\bin\x64\Release\ModernFlyouts.Package_0.9.8516.0_scale-100.msix
+ResourcePack=C:\Users\uintptr\Desktop\ModernFlyouts\ModernFlyouts.Package\bin\x64\Release\ModernFlyouts.Package_0.9.8516.0_scale-125.msix
+ResourcePack=C:\Users\uintptr\Desktop\ModernFlyouts\ModernFlyouts.Package\bin\x64\Release\ModernFlyouts.Package_0.9.8516.0_scale-150.msix
+ResourcePack=C:\Users\uintptr\Desktop\ModernFlyouts\ModernFlyouts.Package\bin\x64\Release\ModernFlyouts.Package_0.9.8516.0_scale-400.msix

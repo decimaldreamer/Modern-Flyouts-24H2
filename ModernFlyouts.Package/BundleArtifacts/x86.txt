@@ -1,0 +1,2 @@
+MainPackage=C:\Users\uintptr\Desktop\ModernFlyouts\ModernFlyouts.Package\bin\x86\Release\ModernFlyouts.Package_0.9.8516.0_x86.msix
+SymbolPackage=C:\Users\uintptr\Desktop\ModernFlyouts\ModernFlyouts.Package\obj\x86\Release\Symbols\ModernFlyouts.Package_0.9.8516.0_x86.appxsym
