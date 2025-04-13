@@ -9,7 +9,7 @@
 [![Discord](https://discordapp.com/api/guilds/772367965307404298/widget.png)](https://discord.gg/TcYskeyaYE)
 
 
-[Overview](#overview--) • [Features](#features--) • [System Requirements](#system-requirements--%EF%B8%8F) • [Installation](#installation--%EF%B8%8F) • [Connect with us](#connect-with-us--) • [Contributing](#contributing--) • [Screenshots](#screenshots--)
+[Overview](#overview--) • [Features](#features--) • [System Requirements](#system-requirements--%EF%B8%8F) • [Installation](#installation--%EF%B8%8F) • [Connect with us](#connect-with-us--) • [Contributing](#contributing--) • [Screenshots](#screenshots--) • [API Documentation](#api-documentation-)
 
 ## Overview  👀
 
@@ -108,4 +108,15 @@ We must also say a big thanks to [our contributors](https://github.com/ModernFly
 - [NAudio](https://github.com/naudio/NAudio)
 - [ModernWpf](https://github.com/Kinnara/ModernWpf) (Inspired the name **Modern**Flyouts)
 - [Hardcodet.NotifyIcon.Wpf](https://github.com/hardcodet/wpf-notifyicon)
+
+## API Documentation 📚
+
+For developers looking to extend or integrate with Modern Flyouts, we provide a comprehensive API documentation. The API allows you to:
+
+- Create and manage custom flyout windows
+- Handle display management and positioning
+- Implement custom logging
+- Access core components like FlyoutManager and FlyoutWindow
+
+Check out our [API Documentation](docs/API.md) for detailed information about available classes, methods, and usage examples.
 

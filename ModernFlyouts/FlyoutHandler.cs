@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using ModernFlyouts.AppLifecycle;
 using ModernFlyouts.Controls;
+using ModernFlyouts.Core;
 using ModernFlyouts.Core.Display;
 using ModernFlyouts.Core.Interop;
 using ModernFlyouts.Core.UI;
@@ -42,13 +43,7 @@ namespace ModernFlyouts
 
         public KeyboardHook KeyboardHook { get; private set; }
 
-        public FlyoutWindow OnScreenFlyoutWindow { get; set; }
-
-        public FlyoutView OnScreenFlyoutView { get; set; }
-
         public SettingsWindow SettingsWindow { get; set; }
-
-        public UIManager UIManager { get; set; }
 
         public AudioFlyoutHelper AudioFlyoutHelper { get; set; }
 
@@ -100,42 +95,6 @@ namespace ModernFlyouts
             }
         }
 
-        private BindablePoint defaultFlyoutPosition;
-
-        public BindablePoint DefaultFlyoutPosition
-        {
-            get => defaultFlyoutPosition;
-            private set
-            {
-                defaultFlyoutPosition = value;
-                defaultFlyoutPosition.ValueChanged += (s, _) =>
-                {
-                    AppDataHelper.SavePropertyValue(s.ToString(), nameof(AppDataHelper.DefaultFlyoutPosition));
-                };
-            }
-        }
-
-        private DisplayMonitor onScreenFlyoutPreferredMonitor;
-
-        public DisplayMonitor OnScreenFlyoutPreferredMonitor
-        {
-            get => onScreenFlyoutPreferredMonitor;
-            set
-            {
-                if (SetProperty(ref onScreenFlyoutPreferredMonitor, value))
-                {
-                    if (HasInitialized)
-                    {
-                        if (!_isPreferredMonitorChanging)
-                            MoveFlyoutToAnotherMonitor();
-
-                        if (_savePreferredMonitor)
-                            AppDataHelper.PreferredDisplayMonitorId = value.DeviceId;
-                    }
-                }
-            }
-        }
-
         private bool runAtStartup;
 
         public bool RunAtStartup
@@ -154,13 +113,7 @@ namespace ModernFlyouts
 
         public void Initialize()
         {
-            DisplayManager.Initialize();
-            var preferredDisplayMonitorId = AppDataHelper.PreferredDisplayMonitorId;
-
-            UIManager = new UIManager();
-            UIManager.Initialize();
-
-            CreateOnScreenFlyoutWindow();
+            FlyoutManager.Instance.Initialize();
 
             CreateWndProc();
 
@@ -178,31 +131,13 @@ namespace ModernFlyouts
 
             DefaultFlyout = AppDataHelper.DefaultFlyout;
 
-            DefaultFlyoutPosition = AppDataHelper.DefaultFlyoutPosition;
-
             onScreenFlyoutOrientation = AppDataHelper.FlyoutOrientation;
             
-            OnScreenFlyoutView.ContentStackPanel.Orientation = OnScreenFlyoutOrientation switch
+            FlyoutManager.Instance.OnScreenFlyoutView.ContentStackPanel.Orientation = OnScreenFlyoutOrientation switch
             {
                 Orientation.Vertical => Orientation.Horizontal,
                 _ => Orientation.Vertical,
             };
-
-            if (DisplayManager.Instance.DisplayMonitors
-                .Any(x => x.DeviceId == preferredDisplayMonitorId))
-            {
-                OnScreenFlyoutPreferredMonitor = DisplayManager.Instance.DisplayMonitors
-                    .First(x => x.DeviceId == preferredDisplayMonitorId);
-            }
-            else
-            {
-                OnScreenFlyoutPreferredMonitor = DisplayManager.Instance.PrimaryDisplayMonitor;
-                if (onScreenFlyoutPreferredMonitor.Bounds.Contains(flyoutPosition.ToPoint()))
-                {
-                    AlignFlyout(flyoutPosition);
-                }
-                else { AlignFlyout(); }
-            }
 
             async void getStartupStatus()
             {
@@ -248,146 +183,99 @@ namespace ModernFlyouts
                 FlyoutTriggerData triggerData = new()
                 {
                     TriggerType = FlyoutTriggerType.AirplaneMode,
-                    Data = e.IsEnabled
+                    AirplaneModeState = e.IsEnabled
                 };
-
                 ProcessFlyoutTrigger(triggerData);
             });
         }
 
         private void Instance_DisplayUpdated(object sender, EventArgs e)
         {
-            if (!DisplayManager.Instance.DisplayMonitors.Any(x => x == onScreenFlyoutPreferredMonitor))
+            if (FlyoutManager.Instance.OnScreenFlyoutWindow != null)
             {
-                _savePreferredMonitor = false;
-                OnScreenFlyoutPreferredMonitor = DisplayManager.Instance.PrimaryDisplayMonitor;
-                AlignFlyout();
-                _savePreferredMonitor = true;
+                FlyoutManager.Instance.AlignFlyout();
             }
-        }
-
-        private void CreateOnScreenFlyoutWindow()
-        {
-            OnScreenFlyoutView = new()
-            {
-                FlyoutTopBar = new()
-            };
-
-            ZBandID zbid = ZBandID.Default;
-
-            using (var proc = Process.GetCurrentProcess())
-            {
-                var isImmersive = IsImmersiveProcess(proc.Handle);
-                var hasUiAccess = HasUiAccessProcess(proc.Handle);
-
-                zbid = isImmersive ? ZBandID.AboveLockUX : (hasUiAccess ? ZBandID.UIAccess : ZBandID.Desktop);
-            }
-
-            var flyoutWindow = new FlyoutWindow()
-            {
-                Activatable = false,
-                Content = OnScreenFlyoutView,
-                ZBandID = zbid,
-                FlyoutWindowType = FlyoutWindowType.OnScreen,
-                Offset = UIManager.FlyoutShadowMargin,
-                IsTimeoutEnabled = true,
-            };
-
-            flyoutWindow.DragMoved += (s, e) =>
-            {
-                SaveOnScreenFlyoutPosition();
-                UpdatePreferredMonitor();
-            };
-
-            OnScreenFlyoutWindow = flyoutWindow;
-
-            BindingOperations.SetBinding(flyoutWindow, FlyoutWindow.PlacementModeProperty, new Binding()
-            {
-                Source = UIManager,
-                Path = new PropertyPath(nameof(UIManager.OnScreenFlyoutWindowPlacementMode)),
-                Mode = BindingMode.TwoWay
-            });
-
-            flyoutPosition = AppDataHelper.FlyoutPosition;
-
-            AlignFlyout(flyoutPosition);
-
-            BindingOperations.SetBinding(flyoutWindow, FlyoutWindow.PreferredDisplayMonitorProperty, new Binding()
-            {
-                Source = this,
-                Path = new PropertyPath(nameof(OnScreenFlyoutPreferredMonitor)),
-                Mode = BindingMode.OneWay
-            });
-
-            BindingOperations.SetBinding(flyoutWindow, ThemeManager.RequestedThemeProperty, new Binding()
-            {
-                Source = UIManager,
-                Path = new PropertyPath(nameof(UIManager.ActualFlyoutTheme)),
-                Mode = BindingMode.OneWay
-            });
-
-            BindingOperations.SetBinding(flyoutWindow, FlyoutWindow.TimeoutProperty, new Binding()
-            {
-                Source = UIManager,
-                Path = new PropertyPath(nameof(UIManager.FlyoutTimeout)),
-                Mode = BindingMode.OneWay
-            });
-
-            BindingOperations.SetBinding(flyoutWindow, FlyoutWindow.AlignmentProperty, new Binding()
-            {
-                Source = UIManager,
-                Path = new PropertyPath(nameof(UIManager.OnScreenFlyoutWindowAlignment)),
-                Mode = BindingMode.OneWay
-            });
-
-            BindingOperations.SetBinding(flyoutWindow, FlyoutWindow.MarginProperty, new Binding()
-            {
-                Source = UIManager,
-                Path = new PropertyPath(nameof(UIManager.OnScreenFlyoutWindowMargin)),
-                Mode = BindingMode.OneWay
-            });
-
-            BindingOperations.SetBinding(flyoutWindow, FlyoutWindow.ExpandDirectionProperty, new Binding()
-            {
-                Source = UIManager,
-                Path = new PropertyPath(nameof(UIManager.OnScreenFlyoutWindowExpandDirection)),
-                Mode = BindingMode.OneWay
-            });
-
-            BindingOperations.SetBinding(flyoutWindow, FlyoutWindow.FlyoutAnimationEnabledProperty, new Binding()
-            {
-                Source = UIManager,
-                Path = new PropertyPath(nameof(UIManager.FlyoutAnimationEnabled)),
-                Mode = BindingMode.OneWay
-            });
         }
 
         private void OnNativeFlyoutShown()
         {
-            if (DefaultFlyout == DefaultFlyout.ModernFlyouts)
+            if (DefaultFlyout == DefaultFlyout.WindowsDefault)
             {
-                if (Handled())
-                    NativeFlyoutHandler.Instance.HideNativeFlyout();
+                return;
+            }
 
-                if (prevTriggerData != null
-                    && !prevTriggerData.IsExpired)
+            if (DefaultFlyout == DefaultFlyout.None)
+            {
+                NativeFlyoutHandler.Instance.HideNativeFlyout();
+                return;
+            }
+
+            if (prevTriggerData != null)
+            {
+                ProcessFlyoutTrigger(prevTriggerData);
+            }
+        }
+
+        internal void ProcessFlyoutTrigger(FlyoutTriggerData triggerData = null)
+        {
+            if (triggerData != null)
+            {
+                prevTriggerData = triggerData;
+            }
+
+            if (DefaultFlyout == DefaultFlyout.WindowsDefault)
+            {
+                return;
+            }
+
+            if (DefaultFlyout == DefaultFlyout.None)
+            {
+                NativeFlyoutHandler.Instance.HideNativeFlyout();
+                return;
+            }
+
+            if (triggerData != null)
+            {
+                var helper = flyoutHelpers.FirstOrDefault(x => x.IsEnabled && x.CanHandleTrigger(triggerData));
+                if (helper != null)
                 {
-                    prevTriggerData.IsExpired = true;
-                    return;
+                    ShowFlyout(helper);
                 }
+            }
+        }
 
-                // When the native flyout is triggered by some factors
-                // that are neither ShellHook messages or airplane mode changes
-                // (that implies the native flyout is triggered by
-                // either touchpad gestures or audio device buttons),
-                // we show the volume flyout as a fallback.
-                // Only volume flyout is shown as a fallback
-                // because other triggers are always detected perfectly.
-                ProcessFlyoutTrigger(new()
-                {
-                    TriggerType = FlyoutTriggerType.Volume,
-                    IsExpired = true
-                });
+        private void ShowFlyout(FlyoutHelperBase helper)
+        {
+            if (helper == null || !helper.IsEnabled)
+            {
+                return;
+            }
+
+            if (DefaultFlyout == DefaultFlyout.WindowsDefault)
+            {
+                return;
+            }
+
+            if (DefaultFlyout == DefaultFlyout.None)
+            {
+                NativeFlyoutHandler.Instance.HideNativeFlyout();
+                return;
+            }
+
+            NativeFlyoutHandler.Instance.HideNativeFlyout();
+            helper.ShowFlyout();
+        }
+
+        private bool Handled()
+        {
+            return DefaultFlyout != DefaultFlyout.WindowsDefault;
+        }
+
+        private void OnDefaultFlyoutChanged()
+        {
+            if (DefaultFlyout == DefaultFlyout.WindowsDefault)
+            {
+                NativeFlyoutHandler.Instance.ShowNativeFlyout();
             }
             else if (DefaultFlyout == DefaultFlyout.None)
             {
@@ -395,207 +283,57 @@ namespace ModernFlyouts
             }
             else
             {
-                NativeFlyoutHandler.Instance.ShowNativeFlyout();
-            }
-        }
-
-        internal void ProcessFlyoutTrigger(FlyoutTriggerData triggerData = null)
-        {
-            Debug.WriteLine("Rattled!");
-            triggerData ??= prevTriggerData ?? new();
-
-            bool canHandle = false;
-            FlyoutHelperBase flyoutHelper = null;
-
-            foreach (var helper in flyoutHelpers)
-            {
-                canHandle = helper.CanHandleNativeOnScreenFlyout(triggerData);
-                if (canHandle)
+                if (prevTriggerData != null)
                 {
-                    flyoutHelper = helper;
-                    break;
+                    ProcessFlyoutTrigger(prevTriggerData);
                 }
             }
-
-            if (canHandle && flyoutHelper != null)
-            {
-                ShowFlyout(flyoutHelper);
-            }
-
-            prevTriggerData = triggerData;
-        }
-
-        private void ShowFlyout(FlyoutHelperBase helper)
-        {
-            if (DefaultFlyout != DefaultFlyout.ModernFlyouts || !helper.IsEnabled)
-            {
-                return;
-            }
-
-            OnScreenFlyoutWindow.StopCloseTimer();
-
-            NativeFlyoutHandler.Instance.VerifyNativeFlyoutCreated();
-
-            if (helper.AlwaysHandleDefaultFlyout)
-            {
-                NativeFlyoutHandler.Instance.HideNativeFlyout();
-            }
-
-            OnScreenFlyoutView.FlyoutHelper = helper;
-            OnScreenFlyoutWindow.IsOpen = true;
-            OnScreenFlyoutWindow.StartCloseTimer();
-        }
-
-        private bool Handled()
-        {
-            if (OnScreenFlyoutView.FlyoutHelper is FlyoutHelperBase helper)
-            {
-                bool canHandle = helper.AlwaysHandleDefaultFlyout && helper.IsEnabled;
-                bool shouldHandle = OnScreenFlyoutWindow.IsOpen;
-                return canHandle && shouldHandle;
-            }
-            return false;
-        }
-
-        private void OnDefaultFlyoutChanged()
-        {
-            if (defaultFlyout != DefaultFlyout.ModernFlyouts)
-            {
-                OnScreenFlyoutWindow.IsOpen = false;
-            }
-            if (defaultFlyout != DefaultFlyout.WindowsDefault)
-            {
-                NativeFlyoutHandler.Instance.HideNativeFlyout();
-            }
-
-            AppDataHelper.DefaultFlyout = defaultFlyout;
         }
 
         private void OnRunAtStartupChanged()
         {
-            StartupHelper.SetRunAtStartupEnabled(runAtStartup);
+            StartupHelper.SetRunAtStartupEnabled(RunAtStartup);
         }
 
         private void CreateWndProc()
         {
-            ShellMessageHookHandler shellHook = new();
-            var hookManager = WndProcHookManager.GetForBandWindow(OnScreenFlyoutWindow);
-            hookManager.RegisterHookHandler(shellHook);
-
-            var displayManager = DisplayManager.Instance;
-            hookManager.RegisterHookHandlerForMessage((uint)WindowMessage.WM_SETTINGCHANGE, displayManager);
-            hookManager.RegisterHookHandlerForMessage((uint)WindowMessage.WM_DISPLAYCHANGE, displayManager);
-
-            OnScreenFlyoutWindow.CreateWindow();
-
-            hookManager.RegisterCallbackForMessage((uint)WindowMessage.WM_QUERYENDSESSION,
-                (_, _, _, _) =>
-                {
-                    RelaunchHelper.RegisterApplicationRestart(
-                        JumpListHelper.arg_appupdated,
-                        RelaunchHelper.RestartFlags.RESTART_NO_CRASH |
-                        RelaunchHelper.RestartFlags.RESTART_NO_HANG |
-                        RelaunchHelper.RestartFlags.RESTART_NO_REBOOT);
-
-                    AppLifecycleManager.PrepareToDie();
-                    return IntPtr.Zero;
-                });
-        }
-
-        private void MoveFlyoutToAnotherMonitor()
-        {
-            if (OnScreenFlyoutWindow.PlacementMode != FlyoutWindowPlacementMode.Manual)
-                return;
-
-            var currentMonitor = DisplayManager.Instance
-                .GetDisplayMonitorFromPoint(flyoutPosition.ToPoint());
-            var currentPos = flyoutPosition.ToPoint();
-            var currentMonitorPos = currentMonitor.Bounds.TopLeft;
-            currentPos.Offset(-currentMonitorPos.X, -currentMonitorPos.Y);
-            var toMonitorPos = onScreenFlyoutPreferredMonitor.Bounds.TopLeft;
-            currentPos.Offset(toMonitorPos.X, toMonitorPos.Y);
-
-            AlignFlyout(currentPos, true, false);
-        }
-
-        private BindablePoint flyoutPosition;
-
-        public void AlignFlyout(BindablePoint toPos = null)
-        {
-            toPos ??= DefaultFlyoutPosition;
-
-            AlignFlyout(toPos.ToPoint(), toPos != flyoutPosition);
-        }
-
-        private void AlignFlyout(Point toPos, bool savePos = true, bool updateMonitor = true)
-        {
-            OnScreenFlyoutWindow.Left = toPos.X;
-            OnScreenFlyoutWindow.Top = toPos.Y;
-
-            if (OnScreenFlyoutWindow.PlacementMode == FlyoutWindowPlacementMode.Manual)
-                OnScreenFlyoutWindow.AlignToPosition();
-
-            if (savePos)
-            {
-                SaveOnScreenFlyoutPosition();
-            }
-            if (updateMonitor)
-            {
-                UpdatePreferredMonitor();
-            }
+            var wndProc = new WndProc();
+            wndProc.Initialize();
         }
 
         private void OnBrightnessCompatibilityChanged()
         {
-            AppDataHelper.BrightnessCompatibility = brightnessCompatibility;
-            BrightnessFlyoutHelper.CompatibilityMode = brightnessCompatibility;
+            if (BrightnessFlyoutHelper != null)
+            {
+                BrightnessFlyoutHelper.CompatibilityMode = BrightnessCompatibility;
+            }
         }
 
         private void OnFlyoutOrientationChanged()
         {
-            AppDataHelper.FlyoutOrientation = OnScreenFlyoutOrientation;
-            OnScreenFlyoutView.ContentStackPanel.Orientation = OnScreenFlyoutOrientation switch
+            if (FlyoutManager.Instance.OnScreenFlyoutView != null)
             {
-                Orientation.Vertical => Orientation.Horizontal,
-                _ => Orientation.Vertical,
-            };
-            AudioFlyoutHelper.OnFlyoutOrientationChanged(OnScreenFlyoutOrientation);
-        }
-
-        private void SaveOnScreenFlyoutPosition()
-        {
-            flyoutPosition.X = OnScreenFlyoutWindow.Left;
-            flyoutPosition.Y = OnScreenFlyoutWindow.Top;
-
-            AppDataHelper.SavePropertyValue(flyoutPosition.ToString(), nameof(AppDataHelper.FlyoutPosition));
-        }
-
-        private void UpdatePreferredMonitor()
-        {
-            if (OnScreenFlyoutWindow.PlacementMode != FlyoutWindowPlacementMode.Manual)
-                return;
-
-            _isPreferredMonitorChanging = true;
-            OnScreenFlyoutPreferredMonitor = DisplayManager.Instance
-                .GetDisplayMonitorFromPoint(flyoutPosition.ToPoint());
-            _isPreferredMonitorChanging = false;
+                FlyoutManager.Instance.OnScreenFlyoutView.ContentStackPanel.Orientation = OnScreenFlyoutOrientation switch
+                {
+                    Orientation.Vertical => Orientation.Horizontal,
+                    _ => Orientation.Vertical,
+                };
+            }
         }
 
         public static void SafelyExitApplication()
         {
-            NativeFlyoutHandler.Instance.ShowNativeFlyout();
-            Environment.Exit(0);
+            Application.Current.Shutdown();
         }
 
         public static void ShowSettingsWindow()
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            if (Instance.SettingsWindow == null)
             {
-                Instance.SettingsWindow ??= new SettingsWindow();
-                Instance.SettingsWindow.Show();
-                Instance.SettingsWindow.Activate();
-                Instance.SettingsWindow.Focus();
-            });
+                Instance.SettingsWindow = new SettingsWindow();
+            }
+            Instance.SettingsWindow.Show();
+            Instance.SettingsWindow.Activate();
         }
     }
 
