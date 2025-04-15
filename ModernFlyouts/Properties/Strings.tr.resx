@@ -204,7 +204,7 @@
     <value>Bağlılıklar</value>
   </data>
   <data name="About.FileABug" xml:space="preserve">
-    <value>Herhangi bir hata bulursanız lütfen github deposunda yeni bir sorun açın. Windows 11 24H2 port by uintptr.</value>
+    <value>Herhangi bir hata bulursanız lütfen github deposunda yeni bir sorun açın.</value>
   </data>
   <data name="AudioFlyoutHelper.MaxVerticalSessionControlsCount" xml:space="preserve">
     <value>Gösterilecek oturum sayısı</value>

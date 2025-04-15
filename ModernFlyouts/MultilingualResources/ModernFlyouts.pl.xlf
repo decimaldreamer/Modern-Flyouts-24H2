@@ -274,7 +274,7 @@
         </trans-unit>
         <trans-unit id="AudioFlyoutHelper.ShowGSMTCInVolumeFlyout" translate="yes" xml:space="preserve">
           <source>Show Global System Media Transport Controls (GSMTC) aka Media controls in Volume flyout</source>
-          <target state="translated">Pokaż kontrolki dźwięku (GSMTC) w nakładce głośności</target>
+          <target state="translated">Pokaż kontrolki multimediów (GSMTC) w nakładce głośności</target>
         </trans-unit>
         <trans-unit id="AudioFlyoutHelper.ShowVolumeControlInGSMTCFlyout" translate="yes" xml:space="preserve">
           <source>Show Volume control in Global System Media Transport Controls (GSMTC) aka Media flyout</source>
@@ -511,18 +511,6 @@
         <trans-unit id="Settings.FlyoutAnimationEnabled" translate="yes" xml:space="preserve">
           <source>Fade animation</source>
           <target state="new">Fade animation</target>
-        </trans-unit>
-        <trans-unit id="Settings.UseSmallFlyout" translate="yes" xml:space="preserve">
-          <source>Enable Condensed Lock Flyouts</source>
-          <target state="new">Enable Condensed Lock Flyouts</target>
-        </trans-unit>
-        <trans-unit id="Settings.FlyoutAxis" translate="yes" xml:space="preserve">
-          <source>Flyout axis</source>
-          <target state="new">Flyout axis</target>
-        </trans-unit>
-        <trans-unit id="Settings.BrightnessCompatibility" translate="yes" xml:space="preserve">
-          <source>Enable compatibility for laptop screens</source>
-          <target state="new">Enable compatibility for laptop screens</target>
         </trans-unit>
       </group>
     </body>

@@ -9,13 +9,13 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="uintptr.ModernFlyouts"
-    Publisher="CN=uintptr"
-    Version="0.9.8516.0" />
+    Name="32669SamG.ModernFlyouts"
+    Publisher="CN=samue"
+    Version="0.9.8622.0" />
 
   <Properties>
-    <DisplayName>ModernFlyouts (24H2)</DisplayName>
-    <PublisherDisplayName>uintptr</PublisherDisplayName>
+    <DisplayName>ms-resource:Resources/PackageDisplayName</DisplayName>
+    <PublisherDisplayName>ms-resource:Resources/PublisherDisplayName</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
 
@@ -60,8 +60,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="ModernFlyouts (24H2)"
-        Description="ModernFlyouts (24H2) support by uintptr"
+        DisplayName="ms-resource:Resources/ApplicationDisplayName"
+        Description="ms-resource:Resources/ApplicationDescription"
         BackgroundColor="transparent"
         Square150x150Logo="Images\Square150x150Logo.png"
         Square44x44Logo="Images\Square44x44Logo.png">
